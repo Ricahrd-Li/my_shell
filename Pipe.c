@@ -19,46 +19,43 @@ int Pipe(int count,char* args[],int array[]){
     for(int i=0;i<count;i++) pipe(fd[i]);
     for(int i=0;i<count;i++){
         if((pid=fork())==0){
-            if(i){
+            if(i){  //如果i==0，那么输入应该从STDIN中来
                 close(fd[i-1][WRITE_END]);
                 dup2(fd[i-1][READ_END],STDIN_FILENO);  
                 close(fd[i-1][READ_END]);
             }
-            if(i<count-1){
+            if(i<count-1){  //如果i==count-1,那么应该输出到STDOUT中去
                 close(fd[i][READ_END]);
                 dup2(fd[i][WRITE_END],STDOUT_FILENO);
                 close(fd[i][WRITE_END]);
             }
-            
-            //not built-in command
-            // if(strcmp(*(args+array[i]),"cd")&& strcmp(*(args+array[i]),"pwd")&& strcmp(*(args+array[i]),"export"))
-                execvp(*(args+array[i]),args+array[i]);
-                exit(0);
-            //built-in command: cd, pwd ,export
-            // else if(strcmp(*(args+array[i]),"cd")==0){
-                // if (*(args+array[i]+1))
-                    // chdir(*(args+array[i]+1));
-            // }
-            // else if(strcmp(*(args+array[i]),"pwd")==0){
-                char wd[4096];
-                puts(getcwd(wd, 4096));
-            // }
-            // else if(strcmp(*(args+array[i]),"export")==0){
-                char *name,*value, *a;
-                if(*(args+array[i]+1)){
-                    name=*(args+array[i]+1);
-                    for(a=name; *a &&(*a!='=');a++);
-                    *a='\0';   //find '=' and divide
-                    if(*(a+1)) value=a+1;
-                    else value="\0";
-                    setenv(name,value,1);
-                }
-            // }
-        }
+            execvp(*(args+array[i]),args+array[i]);
+   
         else{
-            wait(NULL);
-            // printf("parent:%d\n",i);
-            
+            wait(NULL);           
+        }
+    }
+}
+int Pipe(int count,char* args[],int array[]){
+    pid_t pid;
+    int fd[2];
+    pipe(fd);
+    for(int i=0;i<count;i++){
+        if((pid=fork())==0){
+            if(i){  //如果i==0，那么输入应该从STDIN中来
+                close(fd[WRITE_END]);
+                dup2(fd[READ_END],STDIN_FILENO);  
+                close(fd[READ_END]);
+            }
+            if(i<count-1){  //如果i==count-1,那么应该输出到STDOUT中去
+                close(fd[READ_END]);
+                dup2(fd[WRITE_END],STDOUT_FILENO);
+                close(fd[WRITE_END]);
+            }
+            execvp(*(args+array[i]),args+array[i]);
+   
+        else{
+            wait(NULL);           
         }
     }
 }
